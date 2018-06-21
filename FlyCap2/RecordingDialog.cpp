@@ -18,6 +18,7 @@
 #include "stdafx.h"
 #include <errno.h>
 #include <Psapi.h>
+#include <sys/timeb.h>
 #include "FlyCap2_MFC.h"
 #include "RecordingDialog.h"
 
@@ -331,16 +332,7 @@ void RecordingDialog::OnBnClickedButtonStartStopVideoRecord()
 		CString errorList;
 		if (ValidInput(&errorList))
 		{
-			time_t rawtime;
-			struct tm * timeinfo;
-			time( &rawtime );
-			timeinfo = localtime( &rawtime );
-
-			char timestamp[64];
-			strftime( timestamp, 64, "%Y-%m-%d-%H%M%S", timeinfo );
-
 			GetFilePath(&m_saveFilenameBase);
-			m_saveFilenameBase.AppendFormat("_%s", timestamp);
 
 			if(m_radio_bufferedMode.GetCheck())
 			{
@@ -1012,9 +1004,19 @@ void RecordingDialog::GetVideoSettings( VideoRecordingPage::VideoSettings* video
 
 Error RecordingDialog::SaveImage( Image* tmp, ImageRecordingPage::ImageSettings* imageSettings, unsigned int count )
 {
+	time_t rawtime;
+	struct tm *timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	char timestamp[64];
+	strftime(timestamp, 64, "%Y-%m-%d-%H%M%S", timeinfo);
+
+	timeb tb;
+    ftime(&tb);
 	char saveName[MAX_PATH];
 
-	sprintf(saveName, "%s-%04d.%s", imageSettings->filename, count, imageSettings->fileExtension);
+	sprintf(saveName, "%s_%s.%03d-%04d.%s", imageSettings->filename, timestamp, tb.millitm, count, imageSettings->fileExtension);
 	switch (imageSettings->imageFormat)
 	{
 
